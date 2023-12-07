@@ -1,0 +1,54 @@
+.container {
+  /* max-width: 400px; */
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form {
+  display: block;
+  margin: 20px auto;
+  width: fit-content;
+  /* margin-left: 10px; */
+  padding: 20px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 40px;
+}
+.card {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid #160c0c;
+  border-radius: 4px;
+  justify-content: center;
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.error-message {
+  color: red;
+  margin-top: 5px;
+}

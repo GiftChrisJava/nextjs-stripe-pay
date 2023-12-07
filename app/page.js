@@ -1,95 +1,94 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
+import { useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  Elements,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import styles from "./page.css"; // Import the CSS module
 
-export default function Home() {
+const stripePromise = loadStripe(
+  "pk_test_51NV9VgFgObjlCeyVYiNz6TRqEcgGQoA0KQmKiaZowXxUF9D4ii46GyNR9fPwruKP4y7YZ8imveEukPs7jwxVhEUv00dtdCXoDA"
+);
+
+function Payment() {
+  const [cardHolderName, setCardHolderName] = useState("Traveler");
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    const cardExpiryElement = elements.getElement(CardExpiryElement);
+    const cardCvcElement = elements.getElement(CardCvcElement);
+
+    const { token, error } = await stripe.createToken({
+      card: {
+        number: cardNumberElement,
+        exp_month: cardExpiryElement._private.state.expMonth,
+        exp_year: cardExpiryElement._private.state.expYear,
+        cvc: cardCvcElement,
+      },
+      name: cardHolderName,
+    });
+
+    if (error) {
+      console.error("Error:", error);
+    } else {
+      const paymentData = {
+        travelerId: 1,
+      };
+
+      const response = await fetch("http://localhost:8080/traveler/pay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paymentData,
+          token: token.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error("Error:", data.error);
+      } else {
+        console.log("Payment Successful:", data.payment);
+      }
+    }
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <div className={styles.container}>
+      <h1>Stripe Payment Test</h1>
+      <form onSubmit={handleSubmit} className="form">
+        <label>Card Number:</label>
+        <CardNumberElement className="card" />
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        <label>Expiration Date:</label>
+        <CardExpiryElement className="card" />
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+        <label>CVV:</label>
+        <CardCvcElement className="card" />
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+        <button type="submit">Submit Payment</button>
+      </form>
+    </div>
+  );
+}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+// Wrap the Payment component with the Elements provider
+export default function WrappedPayment() {
+  return (
+    <Elements stripe={stripePromise}>
+      <Payment />
+    </Elements>
+  );
 }
